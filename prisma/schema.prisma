@@ -1,0 +1,74 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+generator runtimeClient {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id           String   @id @default(cuid())
+  doubanUid    String   @unique
+  doubanName   String
+  passwordHash String
+  avatar       String?
+  role         String   @default("MEMBER")
+  status       String   @default("DISABLED")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Secret {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  title       String?
+  content     String
+  verifyCode  String?
+  creatorName String
+  creatorUid  String
+  expiresAt   DateTime?
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  images  SecretImage[]
+  replies Reply[]
+}
+
+model SecretImage {
+  id        String @id @default(cuid())
+  secretId  String
+  secret    Secret @relation(fields: [secretId], references: [id], onDelete: Cascade)
+  url       String
+  sortOrder Int    @default(0)
+}
+
+model Reply {
+  id         String   @id @default(cuid())
+  secretId   String
+  secret     Secret   @relation(fields: [secretId], references: [id], onDelete: Cascade)
+  content    String
+  authorUid  String
+  authorName String
+  createdAt  DateTime @default(now())
+}
+
+model GroupMember {
+  id        String   @id @default(cuid())
+  doubanUid String   @unique
+  doubanName String
+  avatar    String?
+  updatedAt DateTime @updatedAt
+}
+
+model SystemSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}
