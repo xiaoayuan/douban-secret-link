@@ -22,6 +22,24 @@ function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+function normalizeDoubanTopicUrl(input: string): string {
+  const parsed = new URL(input);
+
+  if (parsed.hostname === "sec.douban.com" && parsed.pathname === "/c") {
+    const target = parsed.searchParams.get("r");
+    if (target) return normalizeDoubanTopicUrl(target);
+  }
+
+  if (parsed.hostname === "www.douban.com" && parsed.pathname === "/doubanapp/dispatch") {
+    const uri = parsed.searchParams.get("uri");
+    if (uri) return normalizeDoubanTopicUrl(new URL(uri, "https://www.douban.com").toString());
+  }
+
+  const match = parsed.pathname.match(/^\/group\/topic\/(\d+)\/?/);
+  if (!match) throw new ApiError("豆瓣验证帖URL必须是小组帖子地址", 500);
+  return `https://www.douban.com/group/topic/${match[1]}/`;
+}
+
 async function getVerifyPostUrl() {
   const setting = await prisma.systemSetting.findUnique({ where: { key: "douban_verify_post_url" } });
   const url = setting?.value || process.env.DOUBAN_VERIFY_POST_URL || "";
@@ -33,10 +51,10 @@ async function getVerifyPostUrl() {
   } catch {
     throw new ApiError("豆瓣验证帖URL配置不正确", 500);
   }
-  if (parsed.hostname !== "www.douban.com") {
+  if (parsed.hostname !== "www.douban.com" && parsed.hostname !== "sec.douban.com") {
     throw new ApiError("豆瓣验证帖URL必须是 www.douban.com 页面", 500);
   }
-  return url;
+  return normalizeDoubanTopicUrl(url);
 }
 
 async function fetchVerifyPostHtml(url: string) {
@@ -55,16 +73,27 @@ async function fetchVerifyPostHtml(url: string) {
     options.agent = new HttpsProxyAgent(proxy.value);
   }
 
-  const response = await fetch(url, options as RequestInit);
-  if (!response.ok) throw new ApiError(`无法访问豆瓣验证帖 (${response.status})`, 502);
-  return response.text();
+  const pages: string[] = [];
+  for (const start of [0, 100, 200]) {
+    const pageUrl = new URL(url);
+    if (start > 0) pageUrl.searchParams.set("start", String(start));
+    const response = await fetch(pageUrl.toString(), options as RequestInit);
+    if (!response.ok) throw new ApiError(`无法访问豆瓣验证帖 (${response.status})`, 502);
+    const html = await response.text();
+    if (new URL(response.url).hostname === "sec.douban.com" || html.includes("sec.douban.com/c?")) {
+      throw new ApiError("豆瓣返回了安全验证页，请更新后台豆瓣Cookie，或配置可访问豆瓣的代理后再试", 502);
+    }
+    pages.push(html);
+  }
+  return pages.join("\n");
 }
 
 function hasUidCommentedCode(html: string, doubanUid: string, code: string) {
   const uid = escapeRegExp(doubanUid);
   const token = escapeRegExp(code);
-  const uidBeforeCode = new RegExp(`www\\.douban\\.com/people/${uid}/[\\s\\S]{0,1600}${token}`, "i");
-  const codeBeforeUid = new RegExp(`${token}[\\s\\S]{0,1600}www\\.douban\\.com/people/${uid}/`, "i");
+  const profile = `(?:https?:)?//(?:www\\.)?douban\\.com/people/${uid}/|/people/${uid}/`;
+  const uidBeforeCode = new RegExp(`(?:${profile})[\\s\\S]{0,6000}${token}`, "i");
+  const codeBeforeUid = new RegExp(`${token}[\\s\\S]{0,6000}(?:${profile})`, "i");
   return uidBeforeCode.test(html) || codeBeforeUid.test(html);
 }
 
@@ -113,10 +142,9 @@ export async function PATCH(request: NextRequest) {
     if (challenge.expiresAt < new Date()) throw new ApiError("验证口令已过期，请重新生成", 410);
     if (challenge.attempts >= 5) throw new ApiError("验证次数过多，请重新生成口令", 429);
 
-    await prisma.authChallenge.update({ where: { id: challenge.id }, data: { attempts: { increment: 1 } } });
-
     const verifyPostUrl = await getVerifyPostUrl();
     const html = await fetchVerifyPostHtml(verifyPostUrl);
+    await prisma.authChallenge.update({ where: { id: challenge.id }, data: { attempts: { increment: 1 } } });
     if (!hasUidCommentedCode(html, challenge.doubanUid, challenge.code)) {
       throw new ApiError("还没有在验证帖中找到你的口令回复", 404);
     }
