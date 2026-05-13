@@ -26,7 +26,8 @@ export default function HomePage() {
             </div>
           ) : (
             <div className="mt-8 flex flex-col items-center gap-3">
-              <p className="max-w-xs text-xs leading-5 text-gray-500">从私密链接进入后，按页面提示完成豆瓣评论验证即可查看内容。</p>
+              <Link href="/verify?redirect=/create" className="inline-block rounded-full bg-gray-900 px-8 py-3 text-sm font-medium text-white hover:bg-gray-800">验证并创建密文</Link>
+              <p className="max-w-xs text-xs leading-5 text-gray-500">小组成员验证一次后，30 天内可以直接创建和查看密文。</p>
               <Link href="/login" className="text-sm text-gray-600 hover:text-gray-700">管理员登录</Link>
             </div>
           ))}

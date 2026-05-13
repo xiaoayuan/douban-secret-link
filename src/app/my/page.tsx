@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 interface MySecret {
@@ -13,6 +14,7 @@ interface MySecret {
 }
 
 export default function MySecretsPage() {
+  const router = useRouter();
   const [secrets, setSecrets] = useState<MySecret[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -22,12 +24,16 @@ export default function MySecretsPage() {
     fetch("/api/secrets/mine")
       .then((r) => r.json().then((data) => ({ ok: r.ok, data })))
       .then(({ ok, data }) => {
+        if (!ok && data.error === "请先登录") {
+          router.replace("/verify?redirect=/my");
+          return;
+        }
         if (!ok) throw new Error(data.error);
         setSecrets(data.secrets || []);
       })
       .catch((e) => setError(e instanceof Error ? e.message : "加载失败"))
       .finally(() => setLoading(false));
-  }, []);
+  }, [router]);
 
   const copyLink = async (slug: string) => {
     const url = `${window.location.origin}/s/${slug}`;

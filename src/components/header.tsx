@@ -61,6 +61,7 @@ export default function Header() {
             </div>
           ) : (
             <div className="flex items-center gap-2">
+              <Link href="/verify?redirect=/create" className="text-sm text-gray-600 hover:text-gray-900">验证</Link>
               <a href="/login" className="text-sm text-gray-600 hover:text-gray-900">管理员登录</a>
             </div>
           )}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function CreatePage() {
   const router = useRouter();
@@ -14,6 +14,12 @@ export default function CreatePage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [expireHours, setExpireHours] = useState<number | null>(null);
+
+  useEffect(() => {
+    fetch("/api/auth/me").then((r) => r.json()).then((data) => {
+      if (!data.user) router.replace("/verify?redirect=/create");
+    });
+  }, [router]);
 
   const uploadImage = async (file: File) => {
     const formData = new FormData();
