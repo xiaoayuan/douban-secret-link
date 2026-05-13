@@ -6,7 +6,7 @@ import Header from "@/components/header";
 
 export default function HomePage() {
   const [user, setUser] = useState<{ doubanName: string; role: string } | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetch("/api/auth/me").then((r) => r.json()).then((d) => { setUser(d.user); setLoading(false); });
