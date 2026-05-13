@@ -105,12 +105,13 @@ export default function CreatePage() {
           </div>
           <div>
             <label className="mb-1.5 block text-sm font-medium text-gray-700">过期时间（可选）</label>
+            <p className="mb-2 text-xs text-gray-500">为节省存储，密文最多保留 7 天。</p>
             <div className="flex flex-wrap gap-2">
               {[
-                { label: "24小时", hours: 24 }, { label: "7天", hours: 168 }, { label: "30天", hours: 720 }, { label: "永不过期", hours: null },
+                { label: "24小时", hours: 24 }, { label: "3天", hours: 72 }, { label: "7天", hours: 168 },
               ].map((opt) => (
                 <button key={opt.label} onClick={() => setExpireHours(opt.hours)}
-                  className={`rounded-lg px-3 py-1.5 text-xs font-medium ${(opt.hours === null && expireHours === null) || opt.hours === expireHours ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-medium ${opt.hours === expireHours ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
                 >{opt.label}</button>
               ))}
             </div>

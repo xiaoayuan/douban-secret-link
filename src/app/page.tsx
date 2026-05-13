@@ -21,6 +21,7 @@ export default function HomePage() {
           {!loading && (user ? (
             <div className="mt-8 flex flex-col items-center gap-3">
               <Link href="/create" className="inline-block rounded-full bg-gray-900 px-8 py-3 text-sm font-medium text-white hover:bg-gray-800">创建密文</Link>
+              <Link href="/my" className="text-sm text-gray-600 hover:underline">我的密文</Link>
               {user.role === "ADMIN" && <Link href="/admin" className="text-sm text-blue-600 hover:underline">管理员面板</Link>}
             </div>
           ) : (

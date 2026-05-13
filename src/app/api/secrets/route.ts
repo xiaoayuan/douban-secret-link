@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireVerifiedMember, handleApiError } from "@/lib/api-auth";
+import { cleanupOldSecrets, clampSecretExpiry } from "@/lib/secret-retention";
 import { z } from "zod";
 
 const createSchema = z.object({
@@ -21,6 +22,7 @@ function generateSlug(): string {
 export async function POST(request: NextRequest) {
   try {
     const user = await requireVerifiedMember();
+    await cleanupOldSecrets();
     const body = await request.json();
     const parsed = createSchema.parse(body);
 
@@ -37,7 +39,7 @@ export async function POST(request: NextRequest) {
         verifyCode: parsed.verifyCode || null,
         creatorName: user.doubanName,
         creatorUid: user.doubanUid,
-        expiresAt: parsed.expiresAt ? new Date(parsed.expiresAt) : null,
+        expiresAt: clampSecretExpiry(parsed.expiresAt),
         images: parsed.imageUrls ? {
           create: parsed.imageUrls.map((url, i) => ({ url, sortOrder: i })),
         } : undefined,

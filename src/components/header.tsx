@@ -54,8 +54,9 @@ export default function Header() {
               {user.role === "ADMIN" && (
                 <Link href="/admin" className="text-xs text-blue-600 hover:underline">管理</Link>
               )}
+              <Link href="/my" className="text-xs text-gray-500 hover:text-gray-700">我的密文</Link>
               <span className="text-sm text-gray-600">{user.doubanName}</span>
-              <button onClick={() => setShowPwd(!showPwd)} className="text-xs text-gray-500 hover:text-gray-700">改密</button>
+              {user.role === "ADMIN" && <button onClick={() => setShowPwd(!showPwd)} className="text-xs text-gray-500 hover:text-gray-700">改密</button>}
               <a href="/api/auth/logout" className="text-xs text-gray-500 hover:text-gray-700">退出</a>
             </div>
           ) : (

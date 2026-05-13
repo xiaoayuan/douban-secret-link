@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, requireVerifiedMember, ApiError, handleApiError } from "@/lib/api-auth";
+import { cleanupOldSecrets } from "@/lib/secret-retention";
 import { cookies } from "next/headers";
 
 export async function GET(
@@ -9,6 +10,7 @@ export async function GET(
 ) {
   try {
     const user = await requireVerifiedMember();
+    await cleanupOldSecrets();
     const { slug } = await params;
 
     const secret = await prisma.secret.findUnique({
