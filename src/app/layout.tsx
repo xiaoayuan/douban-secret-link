@@ -3,7 +3,7 @@ import "./globals.css";
 import Header from "@/components/header";
 
 export const metadata: Metadata = {
-  title: "豆瓣私密链接",
+  title: "私密链接",
   description: "私密内容分享",
   robots: { index: false, follow: false },
 };

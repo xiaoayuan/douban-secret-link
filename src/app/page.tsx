@@ -16,7 +16,7 @@ export default function HomePage() {
       
       <main className="flex min-h-[80vh] flex-col items-center justify-center px-4">
         <div className="w-full max-w-md text-center">
-          <h1 className="text-3xl font-bold text-gray-900">豆瓣私密链接</h1>
+          <h1 className="text-3xl font-bold text-gray-900">私密链接</h1>
           <p className="mt-3 text-sm text-gray-600">创建私密链接，分享给豆瓣白名单好友。只有激活用户才能查看和回复。</p>
           {!loading && (user ? (
             <div className="mt-8 flex flex-col items-center gap-3">
