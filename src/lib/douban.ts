@@ -1,17 +1,15 @@
 import { HttpsProxyAgent } from "https-proxy-agent";
 
-function getFetchOptions(proxyUrl?: string): Record<string, unknown> {
-  const options: Record<string, unknown> = {
-    headers: {
-      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-      Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-      "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
-      "Cache-Control": "no-cache",
-      "Sec-Ch-Ua": '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
-      "Sec-Ch-Ua-Mobile": "?0",
-      "Sec-Ch-Ua-Platform": '"Windows"',
-    },
+function getFetchOptions(proxyUrl?: string, cookie?: string): Record<string, unknown> {
+  const headers: Record<string, string> = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+    Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+    "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+    "Cache-Control": "no-cache",
   };
+  if (cookie) headers.Cookie = cookie;
+
+  const options: Record<string, unknown> = { headers };
 
   const proxy = proxyUrl || process.env.SCRAPE_PROXY || "";
   if (proxy) {
@@ -21,8 +19,8 @@ function getFetchOptions(proxyUrl?: string): Record<string, unknown> {
   return options;
 }
 
-export async function scrapeGroupMembers(url: string, proxyUrl?: string): Promise<{ doubanUid: string; doubanName: string; avatar: string | null }[]> {
-  const response = await fetch(url, getFetchOptions(proxyUrl) as RequestInit);
+export async function scrapeGroupMembers(url: string, proxyUrl?: string, cookie?: string): Promise<{ doubanUid: string; doubanName: string; avatar: string | null }[]> {
+  const response = await fetch(url, getFetchOptions(proxyUrl, cookie) as RequestInit);
   if (!response.ok) throw new Error(`无法访问豆瓣页面 (${response.status})`);
 
   const html = await response.text();

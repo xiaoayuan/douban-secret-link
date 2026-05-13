@@ -22,6 +22,7 @@ export default function AdminPage() {
   const [showMembers, setShowMembers] = useState(false);
   const [members, setMembers] = useState<{ doubanUid: string; doubanName: string; avatar: string | null }[]>([]);
   const [proxyUrl, setProxyUrl] = useState("");
+  const [doubanCookie, setDoubanCookie] = useState("");
 
   const fetchUsers = useCallback(() => {
     return fetch("/api/admin/users")
@@ -53,7 +54,10 @@ export default function AdminPage() {
   const fetchProxy = useCallback(() => {
     return fetch("/api/admin/proxy")
       .then((r) => r.json())
-      .then((data) => setProxyUrl(data.proxy || ""));
+      .then((data) => {
+        setProxyUrl(data.proxy || "");
+        setDoubanCookie(data.cookie || "");
+      });
   }, []);
 
   useEffect(() => {
@@ -95,15 +99,19 @@ export default function AdminPage() {
 
         {/* 代理设置 */}
         <div className="mb-6 rounded-xl bg-white p-6 shadow-sm">
-          <h2 className="mb-3 text-sm font-medium text-gray-700">抓取代理（豆瓣被封后可设）</h2>
-          <p className="mb-3 text-xs text-gray-500">格式：http://user:pass@ip:port 或 http://ip:port</p>
-          <div className="flex gap-2">
-            <input type="text" value={proxyUrl} onChange={(e) => setProxyUrl(e.target.value)}
-              placeholder="http://127.0.0.1:8080" className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none" />
-            <button onClick={async () => {
-              await fetch("/api/admin/proxy", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ proxy: proxyUrl }) });
-              setScanResult("代理已保存");
-            }} className="rounded-lg bg-gray-600 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700">保存</button>
+          <h2 className="mb-3 text-sm font-medium text-gray-700">抓取设置</h2>
+          <p className="mb-3 text-xs text-gray-500">活跃成员页需登录，在此粘贴豆瓣Cookie</p>
+          <div className="space-y-2">
+            <input type="text" value={doubanCookie} onChange={(e) => setDoubanCookie(e.target.value)}
+              placeholder="豆瓣Cookie（dbcl2=xxx; ck=xxx）" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none" />
+            <div className="flex gap-2">
+              <input type="text" value={proxyUrl} onChange={(e) => setProxyUrl(e.target.value)}
+                placeholder="代理：http://ip:port（可选）" className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none" />
+              <button onClick={async () => {
+                await fetch("/api/admin/proxy", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ proxy: proxyUrl, cookie: doubanCookie }) });
+                setScanResult("已保存");
+              }} className="rounded-lg bg-gray-600 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700">保存</button>
+            </div>
           </div>
         </div>
 

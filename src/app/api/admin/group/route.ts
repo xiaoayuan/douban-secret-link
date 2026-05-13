@@ -48,10 +48,11 @@ export async function POST(request: NextRequest) {
 
     // Get proxy setting
     const proxySetting = await prisma.systemSetting.findUnique({ where: { key: "scrape_proxy" } });
+    const cookieSetting = await prisma.systemSetting.findUnique({ where: { key: "douban_cookie" } });
     const proxyUrl = proxySetting?.value || undefined;
+    const cookie = cookieSetting?.value || undefined;
 
-    // Scrape members
-    const members = await scrapeGroupMembers(url, proxyUrl);
+    const members = await scrapeGroupMembers(url, proxyUrl, cookie);
 
     // Upsert all members to GroupMember table
     let added = 0;
