@@ -20,7 +20,8 @@ export default function AdminPage() {
   const [memberCount, setMemberCount] = useState(0);
   const [savedGroupUrl, setSavedGroupUrl] = useState("");
   const [showMembers, setShowMembers] = useState(false);
-  const [members, setMembers] = useState<{ doubanUid: string; doubanName: string; avatar: string | null }[]>([]);
+  const [members, setMembers] = useState<{ id: string; doubanUid: string; doubanName: string; avatar: string | null }[]>([]);
+  const [selectedUids, setSelectedUids] = useState<Set<string>>(new Set());
   const [proxyUrl, setProxyUrl] = useState("");
   const [doubanCookie, setDoubanCookie] = useState("");
 
@@ -140,13 +141,40 @@ export default function AdminPage() {
             </button>
           )}
           {showMembers && (
-            <div className="mt-3 max-h-48 overflow-y-auto rounded border border-gray-200 bg-gray-50 p-2">
-              <div className="flex flex-wrap gap-1">
+            <div className="mt-3 max-h-72 overflow-y-auto rounded border border-gray-200 bg-gray-50">
+              {selectedUids.size > 0 && (
+                <div className="sticky top-0 flex items-center justify-between bg-red-50 px-3 py-2 border-b border-red-100">
+                  <span className="text-xs text-red-600">已选 {selectedUids.size} 人</span>
+                  <button onClick={async () => {
+                    await fetch("/api/admin/members", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ uids: Array.from(selectedUids) }) });
+                    setSelectedUids(new Set());
+                    fetchMembers();
+                    fetchGroupInfo();
+                  }} className="rounded bg-red-500 px-2 py-0.5 text-xs text-white hover:bg-red-600">删除选中</button>
+                </div>
+              )}
+              <div className="px-2 py-1 border-b border-gray-200">
+                <label className="flex items-center gap-1 text-xs text-gray-500 cursor-pointer">
+                  <input type="checkbox" checked={selectedUids.size === members.length && members.length > 0}
+                    onChange={() => {
+                      if (selectedUids.size === members.length) setSelectedUids(new Set());
+                      else setSelectedUids(new Set(members.map((m) => m.doubanUid)));
+                    }} />
+                  全选
+                </label>
+              </div>
+              <div className="flex flex-wrap gap-1 p-2">
                 {members.map((m) => (
-                  <span key={m.doubanUid} className="inline-flex rounded bg-white px-2 py-0.5 text-xs border border-gray-200">
+                  <label key={m.doubanUid} className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-xs border cursor-pointer ${selectedUids.has(m.doubanUid) ? "bg-red-50 border-red-300" : "bg-white border-gray-200"}`}>
+                    <input type="checkbox" checked={selectedUids.has(m.doubanUid)}
+                      onChange={() => {
+                        const next = new Set(selectedUids);
+                        next.has(m.doubanUid) ? next.delete(m.doubanUid) : next.add(m.doubanUid);
+                        setSelectedUids(next);
+                      }} className="sr-only" />
                     <span className="text-gray-900">{m.doubanName}</span>
-                    <span className="ml-1 text-gray-500">{m.doubanUid}</span>
-                  </span>
+                    <span className="text-gray-500">{m.doubanUid}</span>
+                  </label>
                 ))}
               </div>
             </div>
