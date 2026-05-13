@@ -17,7 +17,7 @@ export type SessionUser = {
 };
 
 export function signToken(user: SessionUser) {
-  return jwt.sign(user, getJwtSecret(), { expiresIn: "7d" });
+  return jwt.sign(user, getJwtSecret(), { expiresIn: "30d" });
 }
 
 export function verifyToken(token: string): SessionUser | null {
