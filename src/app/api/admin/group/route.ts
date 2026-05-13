@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, ApiError, handleApiError } from "@/lib/api-auth";
-import { scrapeGroupMembers } from "@/lib/douban";
+import { scrapeGroupMembersAllPages } from "@/lib/douban";
 
 async function requireAdmin() {
   const user = await requireAuth();
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     const proxyUrl = proxySetting?.value || undefined;
     const cookie = cookieSetting?.value || undefined;
 
-    const members = await scrapeGroupMembers(url, proxyUrl, cookie);
+    const members = await scrapeGroupMembersAllPages(url, proxyUrl, cookie);
 
     // Upsert all members to GroupMember table
     let added = 0;

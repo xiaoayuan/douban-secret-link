@@ -20,7 +20,6 @@ function getFetchOptions(proxyUrl?: string, cookie?: string): Record<string, unk
 }
 
 export async function scrapeGroupMembers(url: string, proxyUrl?: string, cookie?: string): Promise<{ doubanUid: string; doubanName: string; avatar: string | null }[]> {
-  // 延迟避免风控
   const delay = parseInt(process.env.SCRAPE_DELAY_MS || "2000");
   await new Promise((r) => setTimeout(r, delay));
 
@@ -28,6 +27,60 @@ export async function scrapeGroupMembers(url: string, proxyUrl?: string, cookie?
   if (!response.ok) throw new Error(`无法访问豆瓣页面 (${response.status})`);
 
   const html = await response.text();
+  return parseMembersFromHtml(html);
+}
+
+export async function scrapeGroupMembersAllPages(baseUrl: string, proxyUrl?: string, cookie?: string): Promise<{ doubanUid: string; doubanName: string; avatar: string | null }[]> {
+  const allMembers: { doubanUid: string; doubanName: string; avatar: string | null }[] = [];
+  const seen = new Set<string>();
+  const delay = parseInt(process.env.SCRAPE_DELAY_MS || "2000");
+  const pageSize = 50;
+  let page = 0;
+  let hasMore = true;
+
+  // Parse base URL, remove existing start param
+  const urlObj = new URL(baseUrl);
+  urlObj.searchParams.delete("start");
+
+  while (hasMore) {
+    const pageUrl = new URL(urlObj.toString());
+    pageUrl.searchParams.set("start", String(page * pageSize));
+    const fetchUrl = pageUrl.toString();
+
+    console.log(`Scraping page ${page + 1}: ${fetchUrl}`);
+
+    if (page > 0) await new Promise((r) => setTimeout(r, delay));
+
+    const response = await fetch(fetchUrl, getFetchOptions(proxyUrl, cookie) as RequestInit);
+    if (!response.ok) {
+      if (response.status === 403 && page > 0) {
+        // Maybe reached the end, just stop
+        break;
+      }
+      throw new Error(`无法访问豆瓣页面 ${fetchUrl} (${response.status})`);
+    }
+
+    const html = await response.text();
+    const members = parseMembersFromHtml(html);
+
+    if (members.length === 0) {
+      hasMore = false;
+    } else {
+      for (const m of members) {
+        if (!seen.has(m.doubanUid)) {
+          seen.add(m.doubanUid);
+          allMembers.push(m);
+        }
+      }
+      page++;
+    }
+  }
+
+  console.log(`Total members scraped: ${allMembers.length} from ${page} pages`);
+  return allMembers;
+}
+
+function parseMembersFromHtml(html: string): { doubanUid: string; doubanName: string; avatar: string | null }[] {
   const members: { doubanUid: string; doubanName: string; avatar: string | null }[] = [];
   const seen = new Set<string>();
 
