@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, ApiError, handleApiError } from "@/lib/api-auth";
+import { scrapeProfileInfo } from "@/lib/douban";
 
 export async function GET(_request: NextRequest) {
   try {
@@ -10,7 +11,7 @@ export async function GET(_request: NextRequest) {
 
     const members = await prisma.groupMember.findMany({
       orderBy: { doubanName: "asc" },
-      select: { id: true, doubanUid: true, doubanName: true, avatar: true, protected: true },
+      select: { id: true, doubanUid: true, doubanName: true, avatar: true },
     });
 
     return NextResponse.json({ members });
@@ -48,13 +49,21 @@ export async function POST(request: NextRequest) {
     if (!dbUser || dbUser.role !== "ADMIN") throw new ApiError("仅管理员可访问", 403);
 
     const body = await request.json();
-    const { doubanUid, doubanName } = body;
+    const { doubanUid, doubanName: inputName } = body;
     if (!doubanUid) throw new ApiError("请提供UID", 400);
+
+    let doubanName = inputName || doubanUid;
+    if (!inputName) {
+      try {
+        const info = await scrapeProfileInfo(doubanUid);
+        doubanName = info.doubanName;
+      } catch { /* use UID as fallback */ }
+    }
 
     const member = await prisma.groupMember.upsert({
       where: { doubanUid },
-      update: { doubanName: doubanName || doubanUid, protected: true },
-      create: { doubanUid, doubanName: doubanName || doubanUid, protected: true },
+      update: { doubanName },
+      create: { doubanUid, doubanName },
     });
 
     return NextResponse.json({ member }, { status: 201 });

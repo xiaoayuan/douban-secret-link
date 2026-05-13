@@ -7,6 +7,7 @@ interface User {
   doubanName: string;
   role: string;
   status: string;
+  protected?: boolean;
   createdAt: string;
 }
 
@@ -20,7 +21,7 @@ export default function AdminPage() {
   const [memberCount, setMemberCount] = useState(0);
   const [savedGroupUrl, setSavedGroupUrl] = useState("");
   const [showMembers, setShowMembers] = useState(false);
-  const [members, setMembers] = useState<{ id: string; doubanUid: string; doubanName: string; avatar: string | null; protected?: boolean }[]>([]);
+  const [members, setMembers] = useState<{ id: string; doubanUid: string; doubanName: string; avatar: string | null }[]>([]);
   const [selectedUids, setSelectedUids] = useState<Set<string>>(new Set());
   const [manualUid, setManualUid] = useState("");
   const [manualName, setManualName] = useState("");
@@ -70,6 +71,11 @@ export default function AdminPage() {
   const toggleStatus = async (doubanUid: string, currentStatus: string) => {
     const newStatus = currentStatus === "ACTIVE" ? "DISABLED" : "ACTIVE";
     await fetch("/api/admin/users", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ doubanUid, status: newStatus }) });
+    fetchUsers();
+  };
+
+  const toggleProtected = async (doubanUid: string, currentProtected: boolean) => {
+    await fetch("/api/admin/users", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ doubanUid, protected: !currentProtected }) });
     fetchUsers();
   };
 
@@ -153,7 +159,12 @@ export default function AdminPage() {
             </div>
             <button onClick={async () => {
               if (!manualUid) return;
-              await fetch("/api/admin/members", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ doubanUid: manualUid, doubanName: manualName }) });
+              if (!manualName) {
+                try {
+                  const res = await fetch("/api/scrape", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url: `https://www.douban.com/people/${manualUid}/` }) });
+                } catch { /* ignore */ }
+              }
+              await fetch("/api/admin/members", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ doubanUid: manualUid, doubanName: manualName || manualUid }) });
               setManualUid(""); setManualName(""); fetchMembers(); fetchGroupInfo();
             }} className="rounded-lg bg-gray-600 px-3 py-2 text-sm text-white hover:bg-gray-700 whitespace-nowrap">添加</button>
           </div>
@@ -197,7 +208,6 @@ export default function AdminPage() {
                       }} className="sr-only" />
                     <span className="text-gray-900">{m.doubanName}</span>
                     <span className="text-gray-500">{m.doubanUid}</span>
-                    {m.protected && <span className="text-green-600" title="受保护，清理时不会被禁用">🛡</span>}
                   </label>
                 ))}
               </div>
@@ -245,13 +255,19 @@ export default function AdminPage() {
                   <div className="text-xs text-gray-500">UID: {u.doubanUid} · {u.role} · {new Date(u.createdAt).toLocaleDateString("zh-CN")}</div>
                 </div>
                 <div className="flex items-center gap-2">
+                  {u.protected && <span className="text-xs text-green-600" title="受保护，清理时不会被禁用">🛡</span>}
                   <span className={`rounded-full px-2 py-0.5 text-xs ${u.status === "ACTIVE" ? "bg-green-100 text-green-700" : "bg-yellow-100 text-yellow-700"}`}>
                     {u.status === "ACTIVE" ? "已激活" : "禁用"}
                   </span>
                   {u.role !== "ADMIN" && (
-                    <button onClick={() => toggleStatus(u.doubanUid, u.status)}
-                      className={`rounded px-2 py-0.5 text-xs font-medium ${u.status === "ACTIVE" ? "bg-red-50 text-red-600 hover:bg-red-100" : "bg-green-50 text-green-600 hover:bg-green-100"}`}
-                    >{u.status === "ACTIVE" ? "禁用" : "激活"}</button>
+                    <>
+                      <button onClick={() => toggleStatus(u.doubanUid, u.status)}
+                        className={`rounded px-2 py-0.5 text-xs font-medium ${u.status === "ACTIVE" ? "bg-red-50 text-red-600 hover:bg-red-100" : "bg-green-50 text-green-600 hover:bg-green-100"}`}
+                      >{u.status === "ACTIVE" ? "禁用" : "激活"}</button>
+                      <button onClick={() => toggleProtected(u.doubanUid, !!u.protected)}
+                        className={`rounded px-2 py-0.5 text-xs font-medium ${u.protected ? "bg-blue-50 text-blue-600 hover:bg-blue-100" : "bg-gray-50 text-gray-500 hover:bg-gray-100"}`}
+                      >{u.protected ? "取消保护" : "保护"}</button>
+                    </>
                   )}
                 </div>
               </div>

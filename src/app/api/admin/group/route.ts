@@ -67,9 +67,8 @@ export async function POST(request: NextRequest) {
 
     // Deactivate registered users who are NOT in the group (skip protected members)
     const groupUids = new Set(members.map((m) => m.doubanUid));
-    const allUsers = await prisma.user.findMany({ select: { id: true, doubanUid: true, role: true } });
-    const protectedMembers = await prisma.groupMember.findMany({ where: { protected: true }, select: { doubanUid: true } });
-    const protectedUids = new Set(protectedMembers.map((m) => m.doubanUid));
+    const allUsers = await prisma.user.findMany({ select: { id: true, doubanUid: true, role: true, protected: true } });
+    const protectedUids = new Set(allUsers.filter((u) => u.protected).map((u) => u.doubanUid));
     let deactivated = 0;
     for (const u of allUsers) {
       if (u.role === "ADMIN") continue;

@@ -13,7 +13,7 @@ export async function GET() {
 
     const users = await prisma.user.findMany({
       orderBy: { createdAt: "desc" },
-      select: { id: true, doubanUid: true, doubanName: true, role: true, status: true, createdAt: true },
+      select: { id: true, doubanUid: true, doubanName: true, role: true, status: true, protected: true, createdAt: true },
     });
 
     return NextResponse.json({ users });
@@ -32,7 +32,7 @@ export async function PATCH(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { doubanUid, status, role } = body;
+    const { doubanUid, status, role, protected: protect } = body;
 
     if (!doubanUid) throw new ApiError("缺少UID", 400);
 
@@ -40,7 +40,6 @@ export async function PATCH(request: NextRequest) {
     if (!target) throw new ApiError("用户不存在", 404);
 
     if (target.role === "ADMIN" && role === "MEMBER" && body.role !== undefined) {
-      // Don't allow demoting the last admin
       const adminCount = await prisma.user.count({ where: { role: "ADMIN" } });
       if (adminCount <= 1) throw new ApiError("不能移除最后一个管理员", 400);
     }
@@ -50,8 +49,9 @@ export async function PATCH(request: NextRequest) {
       data: {
         ...(status ? { status } : {}),
         ...(role ? { role } : {}),
+        ...(protect !== undefined ? { protected: protect } : {}),
       },
-      select: { id: true, doubanUid: true, doubanName: true, role: true, status: true },
+      select: { id: true, doubanUid: true, doubanName: true, role: true, status: true, protected: true },
     });
 
     return NextResponse.json({ user: updated });
