@@ -60,8 +60,8 @@ export default function Header() {
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <Link href="/login" className="text-sm text-gray-600 hover:text-gray-900">登录</Link>
-              <Link href="/register" className="rounded-lg bg-gray-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-700">注册</Link>
+              <a href="/login" className="text-sm text-gray-600 hover:text-gray-900">登录</a>
+              <a href="/register" className="rounded-lg bg-gray-900 px-3 py-1.5 text-xs font-medium text-white hover:bg-gray-700">注册</a>
             </div>
           )}
         </div>
