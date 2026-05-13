@@ -27,7 +27,7 @@ export async function POST(
       secure: process.env.AUTH_COOKIE_SECURE === "true",
       sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60,
-      path: `/s/${slug}`,
+      path: "/",
     });
     return response;
   } catch (error) {
