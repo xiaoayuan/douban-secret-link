@@ -71,24 +71,3 @@ export async function POST(request: NextRequest) {
     return handleApiError(error);
   }
 }
-
-export async function PATCH(request: NextRequest) {
-  try {
-    const user = await requireAuth();
-    const dbUser = await prisma.user.findUnique({ where: { doubanUid: user.doubanUid } });
-    if (!dbUser || dbUser.role !== "ADMIN") throw new ApiError("仅管理员可访问", 403);
-
-    const body = await request.json();
-    const { doubanUid, protected: protect } = body;
-    if (!doubanUid) throw new ApiError("请提供UID", 400);
-
-    const member = await prisma.groupMember.update({
-      where: { doubanUid },
-      data: { protected: protect },
-    });
-
-    return NextResponse.json({ member });
-  } catch (error) {
-    return handleApiError(error);
-  }
-}
