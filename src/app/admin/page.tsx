@@ -27,6 +27,7 @@ export default function AdminPage() {
   const [manualName, setManualName] = useState("");
   const [proxyUrl, setProxyUrl] = useState("");
   const [doubanCookie, setDoubanCookie] = useState("");
+  const [verifyPostUrl, setVerifyPostUrl] = useState("");
 
   const fetchUsers = useCallback(() => {
     return fetch("/api/admin/users")
@@ -61,6 +62,7 @@ export default function AdminPage() {
       .then((data) => {
         setProxyUrl(data.proxy || "");
         setDoubanCookie(data.cookie || "");
+        setVerifyPostUrl(data.verifyPostUrl || "");
       });
   }, []);
 
@@ -113,11 +115,13 @@ export default function AdminPage() {
           <div className="space-y-2">
             <input type="text" value={doubanCookie} onChange={(e) => setDoubanCookie(e.target.value)}
               placeholder="豆瓣Cookie（dbcl2=xxx; ck=xxx）" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none" />
+            <input type="text" value={verifyPostUrl} onChange={(e) => setVerifyPostUrl(e.target.value)}
+              placeholder="豆瓣验证帖URL（用户回复一次性口令的帖子）" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none" />
             <div className="flex gap-2">
               <input type="text" value={proxyUrl} onChange={(e) => setProxyUrl(e.target.value)}
                 placeholder="代理：http://ip:port（可选）" className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none" />
               <button onClick={async () => {
-                await fetch("/api/admin/proxy", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ proxy: proxyUrl, cookie: doubanCookie }) });
+                await fetch("/api/admin/proxy", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ proxy: proxyUrl, cookie: doubanCookie, verifyPostUrl }) });
                 setScanResult("已保存");
               }} className="rounded-lg bg-gray-600 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700">保存</button>
             </div>

@@ -73,3 +73,17 @@ model SystemSetting {
   value     String
   updatedAt DateTime @updatedAt
 }
+
+model AuthChallenge {
+  id         String    @id @default(cuid())
+  doubanUid  String
+  code       String    @unique
+  status     String    @default("PENDING")
+  attempts   Int       @default(0)
+  expiresAt  DateTime
+  createdAt  DateTime  @default(now())
+  verifiedAt DateTime?
+
+  @@index([doubanUid])
+  @@index([code])
+}

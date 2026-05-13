@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { requireAuth, handleApiError } from "@/lib/api-auth";
+import { requireVerifiedMember, handleApiError } from "@/lib/api-auth";
 import { z } from "zod";
 
 const createSchema = z.object({
@@ -14,13 +14,13 @@ const createSchema = z.object({
 function generateSlug(): string {
   const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
   let slug = "";
-  for (let i = 0; i < 8; i++) slug += chars[Math.floor(Math.random() * chars.length)];
+  for (let i = 0; i < 20; i++) slug += chars[Math.floor(Math.random() * chars.length)];
   return slug;
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const user = await requireAuth();
+    const user = await requireVerifiedMember();
     const body = await request.json();
     const parsed = createSchema.parse(body);
 

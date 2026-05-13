@@ -10,7 +10,8 @@ export async function GET() {
 
     const proxy = await prisma.systemSetting.findUnique({ where: { key: "scrape_proxy" } });
     const cookie = await prisma.systemSetting.findUnique({ where: { key: "douban_cookie" } });
-    return NextResponse.json({ proxy: proxy?.value || "", cookie: cookie?.value || "" });
+    const verifyPostUrl = await prisma.systemSetting.findUnique({ where: { key: "douban_verify_post_url" } });
+    return NextResponse.json({ proxy: proxy?.value || "", cookie: cookie?.value || "", verifyPostUrl: verifyPostUrl?.value || "" });
   } catch (error) {
     return handleApiError(error);
   }
@@ -23,7 +24,7 @@ export async function POST(request: NextRequest) {
     if (!dbUser || dbUser.role !== "ADMIN") throw new ApiError("仅管理员", 403);
 
     const body = await request.json();
-    const { proxy, cookie } = body;
+    const { proxy, cookie, verifyPostUrl } = body;
 
     if (proxy !== undefined) {
       await prisma.systemSetting.upsert({
@@ -41,7 +42,15 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return NextResponse.json({ proxy, cookie });
+    if (verifyPostUrl !== undefined) {
+      await prisma.systemSetting.upsert({
+        where: { key: "douban_verify_post_url" },
+        update: { value: verifyPostUrl || "" },
+        create: { key: "douban_verify_post_url", value: verifyPostUrl || "" },
+      });
+    }
+
+    return NextResponse.json({ proxy, cookie, verifyPostUrl });
   } catch (error) {
     return handleApiError(error);
   }

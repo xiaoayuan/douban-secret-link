@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { AUTH_COOKIE_NAME, getUserFromToken, SessionUser } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
 
 export async function requireAuth(): Promise<SessionUser> {
   const cookieStore = await cookies();
@@ -15,6 +16,21 @@ export async function requireAuth(): Promise<SessionUser> {
   }
 
   return user;
+}
+
+export async function requireVerifiedMember(): Promise<SessionUser> {
+  const user = await requireAuth();
+  const dbUser = await prisma.user.findUnique({ where: { doubanUid: user.doubanUid } });
+  if (!dbUser || dbUser.status !== "ACTIVE") {
+    throw new ApiError("账号未激活或已被禁用", 403);
+  }
+  if (dbUser.role === "ADMIN") return user;
+
+  const member = await prisma.groupMember.findUnique({ where: { doubanUid: user.doubanUid } });
+  if (!member) {
+    throw new ApiError("当前豆瓣账号不在小组成员名单中", 403);
+  }
+  return { doubanUid: dbUser.doubanUid, doubanName: dbUser.doubanName };
 }
 
 export class ApiError extends Error {

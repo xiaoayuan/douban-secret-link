@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAuth, ApiError, handleApiError } from "@/lib/api-auth";
+import { requireVerifiedMember, ApiError, handleApiError } from "@/lib/api-auth";
 import { writeFile, mkdir } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { randomUUID } from "node:crypto";
@@ -9,7 +9,7 @@ const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/gif", "image/webp"];
 
 export async function POST(request: NextRequest) {
   try {
-    await requireAuth();
+    await requireVerifiedMember();
 
     const formData = await request.formData();
     const file = formData.get("file");
