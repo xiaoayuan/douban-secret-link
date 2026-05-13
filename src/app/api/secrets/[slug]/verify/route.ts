@@ -24,7 +24,7 @@ export async function POST(
     const response = NextResponse.json({ verified: true });
     response.cookies.set(`dsl_verify_${slug}`, "verified", {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: process.env.AUTH_COOKIE_SECURE === "true",
       sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60,
       path: `/s/${slug}`,
