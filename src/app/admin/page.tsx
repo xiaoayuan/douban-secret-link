@@ -21,6 +21,7 @@ export default function AdminPage() {
   const [savedGroupUrl, setSavedGroupUrl] = useState("");
   const [showMembers, setShowMembers] = useState(false);
   const [members, setMembers] = useState<{ doubanUid: string; doubanName: string; avatar: string | null }[]>([]);
+  const [proxyUrl, setProxyUrl] = useState("");
 
   const fetchUsers = useCallback(() => {
     return fetch("/api/admin/users")
@@ -49,9 +50,15 @@ export default function AdminPage() {
       .then((data) => setMembers(data.members || []));
   }, []);
 
+  const fetchProxy = useCallback(() => {
+    return fetch("/api/admin/proxy")
+      .then((r) => r.json())
+      .then((data) => setProxyUrl(data.proxy || ""));
+  }, []);
+
   useEffect(() => {
-    Promise.all([fetchUsers(), fetchGroupInfo()]);
-  }, [fetchUsers, fetchGroupInfo]);
+    Promise.all([fetchUsers(), fetchGroupInfo(), fetchProxy()]);
+  }, [fetchUsers, fetchGroupInfo, fetchProxy]);
 
   const toggleStatus = async (doubanUid: string, currentStatus: string) => {
     const newStatus = currentStatus === "ACTIVE" ? "DISABLED" : "ACTIVE";
@@ -85,6 +92,20 @@ export default function AdminPage() {
       <main className="mx-auto max-w-4xl px-4 py-8">
         <h1 className="mb-6 text-2xl font-bold text-gray-900">管理员面板</h1>
         {error && <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</div>}
+
+        {/* 代理设置 */}
+        <div className="mb-6 rounded-xl bg-white p-6 shadow-sm">
+          <h2 className="mb-3 text-sm font-medium text-gray-700">抓取代理（豆瓣被封后可设）</h2>
+          <p className="mb-3 text-xs text-gray-500">格式：http://user:pass@ip:port 或 http://ip:port</p>
+          <div className="flex gap-2">
+            <input type="text" value={proxyUrl} onChange={(e) => setProxyUrl(e.target.value)}
+              placeholder="http://127.0.0.1:8080" className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none" />
+            <button onClick={async () => {
+              await fetch("/api/admin/proxy", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ proxy: proxyUrl }) });
+              setScanResult("代理已保存");
+            }} className="rounded-lg bg-gray-600 px-4 py-2 text-sm font-medium text-white hover:bg-gray-700">保存</button>
+          </div>
+        </div>
 
         {/* 小组管理 */}
         <div className="mb-6 rounded-xl bg-white p-6 shadow-sm">

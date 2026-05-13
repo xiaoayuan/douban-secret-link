@@ -46,8 +46,12 @@ export async function POST(request: NextRequest) {
       create: { key: "group_url", value: url },
     });
 
+    // Get proxy setting
+    const proxySetting = await prisma.systemSetting.findUnique({ where: { key: "scrape_proxy" } });
+    const proxyUrl = proxySetting?.value || undefined;
+
     // Scrape members
-    const members = await scrapeGroupMembers(url);
+    const members = await scrapeGroupMembers(url, proxyUrl);
 
     // Upsert all members to GroupMember table
     let added = 0;
