@@ -23,7 +23,7 @@ export default function AdminPage() {
   const [members, setMembers] = useState<{ doubanUid: string; doubanName: string; avatar: string | null }[]>([]);
 
   const fetchUsers = useCallback(() => {
-    fetch("/api/admin/users")
+    return fetch("/api/admin/users")
       .then((r) => r.json())
       .then((data) => {
         if (data.error) setError(data.error);
@@ -33,7 +33,7 @@ export default function AdminPage() {
   }, []);
 
   const fetchGroupInfo = useCallback(() => {
-    fetch("/api/admin/group")
+    return fetch("/api/admin/group")
       .then((r) => r.json())
       .then((data) => {
         setSavedGroupUrl(data.groupUrl || "");
@@ -44,7 +44,7 @@ export default function AdminPage() {
   }, [groupUrl]);
 
   const fetchMembers = useCallback(() => {
-    fetch("/api/admin/members")
+    return fetch("/api/admin/members")
       .then((r) => r.json())
       .then((data) => setMembers(data.members || []));
   }, []);
