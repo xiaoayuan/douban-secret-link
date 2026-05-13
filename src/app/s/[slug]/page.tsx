@@ -173,7 +173,9 @@ export default function SecretPage() {
             {secret.expiresAt && (<><span>·</span><span className={expired ? "text-red-500" : ""}>{expired ? "已过期" : getRemaining(secret.expiresAt)}</span></>)}
             {secret.isCreator && (<><span>·</span><a href={`/m/${secret.slug}`} className="text-blue-500 hover:underline">管理</a></>)}
           </div>
-          <div className="whitespace-pre-wrap text-sm leading-relaxed text-gray-700">{secret.content}</div>
+          <div className="whitespace-pre-wrap text-sm leading-relaxed text-gray-700">
+            <ContentWithLinks text={secret.content} />
+          </div>
           {secret.images.length > 0 && (
             <div className="mt-4 flex flex-wrap gap-2">
               {secret.images.map((img, i) => <img key={i} src={img.url} alt="" className="h-24 w-24 cursor-pointer rounded-lg object-cover" onClick={() => setSelectedImage(img.url)} />)}
@@ -188,7 +190,7 @@ export default function SecretPage() {
             {secret.replies.map((reply) => (
               <div key={reply.id} className="mb-4 last:mb-0">
                 <div className="flex items-center gap-2"><span className="text-xs font-medium text-gray-900">{reply.authorName}</span><span className="text-xs text-gray-500">{formatTime(reply.createdAt)}</span></div>
-                <ReplyContent content={reply.content} onImageClick={setSelectedImage} />
+                <ContentWithLinks text={reply.content} onImageClick={setSelectedImage} />
               </div>
             ))}
             <div ref={chatEndRef} />
@@ -212,14 +214,29 @@ export default function SecretPage() {
   );
 }
 
-function ReplyContent({ content, onImageClick }: { content: string; onImageClick: (url: string) => void }) {
-  // Split content by image URLs (starts with /uploads/)
-  const parts = content.split(/(\/uploads\/[^\s]+)/g);
+function ContentWithLinks({ text, onImageClick }: { text: string; onImageClick?: (url: string) => void }) {
+  // Split text by URLs and image paths
+  const urlPattern = /(https?:\/\/[^\s<>"]+)/g;
+  const parts = text.split(urlPattern);
+  const matches = text.match(urlPattern) || [];
+
   return (
     <div className="mt-1 whitespace-pre-wrap text-sm text-gray-700">
       {parts.map((part, i) => {
-        if (part.startsWith("/uploads/")) {
+        const isUrl = /^https?:\/\//.test(part);
+        const isImage = /\/uploads\/[^\s]+$/.test(part) && /\.(jpg|jpeg|png|gif|webp)$/i.test(part);
+        const isDouban = isUrl && part.includes("douban.com");
+
+        if (isImage && onImageClick) {
           return <img key={i} src={part} alt="" className="my-1 max-h-48 rounded-lg cursor-pointer" onClick={() => onImageClick(part)} />;
+        }
+        if (isUrl) {
+          return (
+            <a key={i} href={part} target="_blank" rel="noopener noreferrer"
+              className={isDouban ? "text-green-700 hover:underline" : "text-blue-600 hover:underline"}>
+              {isDouban ? part : part.length > 50 ? part.slice(0, 50) + "..." : part}
+            </a>
+          );
         }
         return <span key={i}>{part}</span>;
       })}
