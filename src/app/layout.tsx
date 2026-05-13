@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import Header from "@/components/header";
 
 export const metadata: Metadata = {
   title: "豆瓣私密链接",
@@ -18,7 +19,10 @@ export default function RootLayout({
         <meta name="robots" content="noindex, nofollow, noarchive" />
         <meta name="referrer" content="no-referrer" />
       </head>
-      <body className="min-h-screen antialiased">{children}</body>
+      <body className="min-h-screen antialiased">
+        <Header />
+        {children}
+      </body>
     </html>
   );
 }

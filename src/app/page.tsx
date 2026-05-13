@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import Header from "@/components/header";
 
 export default function HomePage() {
   const [user, setUser] = useState<{ doubanName: string; role: string } | null>(null);
@@ -14,7 +13,7 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
+      
       <main className="flex min-h-[80vh] flex-col items-center justify-center px-4">
         <div className="w-full max-w-md text-center">
           <h1 className="text-3xl font-bold text-gray-900">豆瓣私密链接</h1>

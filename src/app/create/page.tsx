@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import Header from "@/components/header";
 
 export default function CreatePage() {
   const router = useRouter();
@@ -72,7 +71,7 @@ export default function CreatePage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
+      
       <main className="mx-auto max-w-2xl px-4 py-8">
         <h1 className="mb-8 text-2xl font-bold text-gray-900">创建密文</h1>
         {error && <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</div>}

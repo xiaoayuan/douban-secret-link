@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import Header from "@/components/header";
 
 interface User {
   doubanUid: string;
@@ -82,7 +81,7 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
+      
       <main className="mx-auto max-w-4xl px-4 py-8">
         <h1 className="mb-6 text-2xl font-bold text-gray-900">管理员面板</h1>
         {error && <div className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</div>}

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
-import Header from "@/components/header";
 
 interface Secret {
   id: string; slug: string; title: string | null; creatorUid: string;
@@ -49,12 +48,12 @@ export default function ManagePage() {
   };
 
   if (loading) return <div className="flex min-h-screen items-center justify-center bg-gray-50"><div className="text-sm text-gray-500">加载中...</div></div>;
-  if (error) return <div className="min-h-screen bg-gray-50"><Header /><main className="flex min-h-[60vh] items-center justify-center px-4"><div className="rounded-lg bg-red-50 p-4 text-sm text-red-600">{error}</div></main></div>;
+  if (error) return <div className="min-h-screen bg-gray-50"><main className="flex min-h-[60vh] items-center justify-center px-4"><div className="rounded-lg bg-red-50 p-4 text-sm text-red-600">{error}</div></main></div>;
   if (!secret) return null;
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
+      
       <main className="mx-auto max-w-2xl px-4 py-8">
         <h1 className="mb-6 text-2xl font-bold text-gray-900">管理密文</h1>
         <div className="space-y-4">

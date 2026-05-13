@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Header from "@/components/header";
 
 interface User {
   doubanUid: string;
@@ -110,11 +109,11 @@ export default function SecretPage() {
   if (loading) return <div className="flex min-h-screen items-center justify-center bg-gray-50"><div className="text-sm text-gray-500">加载中...</div></div>;
 
   if (!secret) return (
-    <div className="min-h-screen bg-gray-50"><Header /><main className="flex min-h-[60vh] items-center justify-center px-4"><div className="rounded-lg bg-red-50 p-4 text-sm text-red-600">{error || "密文不存在"}</div></main></div>
+    <div className="min-h-screen bg-gray-50"><main className="flex min-h-[60vh] items-center justify-center px-4"><div className="rounded-lg bg-red-50 p-4 text-sm text-red-600">{error || "密文不存在"}</div></main></div>
   );
 
   if (secret.needsVerifyCode) return (
-    <div className="min-h-screen bg-gray-50"><Header />
+    <div className="min-h-screen bg-gray-50">
       <main className="flex min-h-[60vh] flex-col items-center justify-center px-4">
         <div className="w-full max-w-sm text-center">
           <h1 className="mb-2 text-xl font-bold text-gray-900">{secret.title || "私密内容"}</h1>
@@ -131,7 +130,7 @@ export default function SecretPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
+      
       <main className="mx-auto max-w-2xl px-4 py-6">
         <div className="rounded-xl bg-white p-6 shadow-sm">
           {secret.title && <h1 className="mb-3 text-xl font-bold text-gray-900">{secret.title}</h1>}
