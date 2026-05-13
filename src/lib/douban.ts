@@ -20,6 +20,10 @@ function getFetchOptions(proxyUrl?: string, cookie?: string): Record<string, unk
 }
 
 export async function scrapeGroupMembers(url: string, proxyUrl?: string, cookie?: string): Promise<{ doubanUid: string; doubanName: string; avatar: string | null }[]> {
+  // 延迟避免风控
+  const delay = parseInt(process.env.SCRAPE_DELAY_MS || "2000");
+  await new Promise((r) => setTimeout(r, delay));
+
   const response = await fetch(url, getFetchOptions(proxyUrl, cookie) as RequestInit);
   if (!response.ok) throw new Error(`无法访问豆瓣页面 (${response.status})`);
 
