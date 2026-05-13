@@ -44,6 +44,7 @@ export default function SecretPage() {
   const [error, setError] = useState("");
   const [replyText, setReplyText] = useState("");
   const [sending, setSending] = useState(false);
+  const [uploadingImg, setUploadingImg] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [verifyInput, setVerifyInput] = useState("");
   const [verifying, setVerifying] = useState(false);
@@ -73,6 +74,37 @@ export default function SecretPage() {
   }, [user, fetchSecret]);
 
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [secret?.replies]);
+
+  // Auto-refresh replies every 3s
+  useEffect(() => {
+    if (!secret || secret.needsVerifyCode || loading) return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/secrets/${slug}`);
+        const data = await res.json();
+        if (data.secret && !data.secret.needsVerifyCode) {
+          setSecret((prev) => prev ? { ...prev, replies: data.secret.replies } : prev);
+        }
+      } catch { /* ignore */ }
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [slug, secret?.needsVerifyCode, loading]);
+
+  const uploadReplyImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingImg(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setReplyText((prev) => prev + (prev ? "\n" : "") + data.url);
+    } catch { setError("图片上传失败"); }
+    setUploadingImg(false);
+    e.target.value = "";
+  };
 
   const handleVerify = async () => {
     if (!verifyInput.trim()) return;
@@ -154,7 +186,7 @@ export default function SecretPage() {
             {secret.replies.map((reply) => (
               <div key={reply.id} className="mb-4 last:mb-0">
                 <div className="flex items-center gap-2"><span className="text-xs font-medium text-gray-900">{reply.authorName}</span><span className="text-xs text-gray-500">{formatTime(reply.createdAt)}</span></div>
-                <div className="mt-1 whitespace-pre-wrap text-sm text-gray-700">{reply.content}</div>
+                <ReplyContent content={reply.content} onImageClick={setSelectedImage} />
               </div>
             ))}
             <div ref={chatEndRef} />
@@ -162,6 +194,10 @@ export default function SecretPage() {
           {!expired && secret.isActive && (
             <div className="border-t border-gray-100 p-3">
               <div className="flex gap-2">
+                <label className={`rounded-lg border border-gray-200 px-3 py-2 text-sm cursor-pointer hover:bg-gray-50 ${uploadingImg ? "opacity-50" : ""}`}>
+                  {uploadingImg ? "..." : "🖼"}
+                  <input type="file" accept="image/*" onChange={uploadReplyImage} disabled={uploadingImg} className="hidden" />
+                </label>
                 <input type="text" value={replyText} onChange={(e) => setReplyText(e.target.value)} onKeyDown={(e) => e.key === "Enter" && sendReply()} placeholder="输入回复..." className="flex-1 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:border-gray-400 focus:outline-none" />
                 <button onClick={sendReply} disabled={sending || !replyText.trim()} className="rounded-lg bg-gray-900 px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50">{sending ? "..." : "发送"}</button>
               </div>
@@ -170,6 +206,21 @@ export default function SecretPage() {
         </div>
       </main>
       {selectedImage && <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80" onClick={() => setSelectedImage(null)}><img src={selectedImage} alt="" className="max-h-[90vh] max-w-[90vw] rounded-lg object-contain" /></div>}
+    </div>
+  );
+}
+
+function ReplyContent({ content, onImageClick }: { content: string; onImageClick: (url: string) => void }) {
+  // Split content by image URLs (starts with /uploads/)
+  const parts = content.split(/(\/uploads\/[^\s]+)/g);
+  return (
+    <div className="mt-1 whitespace-pre-wrap text-sm text-gray-700">
+      {parts.map((part, i) => {
+        if (part.startsWith("/uploads/")) {
+          return <img key={i} src={part} alt="" className="my-1 max-h-48 rounded-lg cursor-pointer" onClick={() => onImageClick(part)} />;
+        }
+        return <span key={i}>{part}</span>;
+      })}
     </div>
   );
 }
