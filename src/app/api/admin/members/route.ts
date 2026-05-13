@@ -10,7 +10,7 @@ export async function GET(_request: NextRequest) {
 
     const members = await prisma.groupMember.findMany({
       orderBy: { doubanName: "asc" },
-      select: { id: true, doubanUid: true, doubanName: true, avatar: true },
+      select: { id: true, doubanUid: true, doubanName: true, avatar: true, protected: true },
     });
 
     return NextResponse.json({ members });
@@ -53,11 +53,32 @@ export async function POST(request: NextRequest) {
 
     const member = await prisma.groupMember.upsert({
       where: { doubanUid },
-      update: { doubanName: doubanName || doubanUid },
-      create: { doubanUid, doubanName: doubanName || doubanUid },
+      update: { doubanName: doubanName || doubanUid, protected: true },
+      create: { doubanUid, doubanName: doubanName || doubanUid, protected: true },
     });
 
     return NextResponse.json({ member }, { status: 201 });
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const user = await requireAuth();
+    const dbUser = await prisma.user.findUnique({ where: { doubanUid: user.doubanUid } });
+    if (!dbUser || dbUser.role !== "ADMIN") throw new ApiError("仅管理员可访问", 403);
+
+    const body = await request.json();
+    const { doubanUid, protected: protect } = body;
+    if (!doubanUid) throw new ApiError("请提供UID", 400);
+
+    const member = await prisma.groupMember.update({
+      where: { doubanUid },
+      data: { protected: protect },
+    });
+
+    return NextResponse.json({ member });
   } catch (error) {
     return handleApiError(error);
   }

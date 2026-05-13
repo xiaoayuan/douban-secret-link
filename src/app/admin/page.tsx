@@ -20,7 +20,7 @@ export default function AdminPage() {
   const [memberCount, setMemberCount] = useState(0);
   const [savedGroupUrl, setSavedGroupUrl] = useState("");
   const [showMembers, setShowMembers] = useState(false);
-  const [members, setMembers] = useState<{ id: string; doubanUid: string; doubanName: string; avatar: string | null }[]>([]);
+  const [members, setMembers] = useState<{ id: string; doubanUid: string; doubanName: string; avatar: string | null; protected?: boolean }[]>([]);
   const [selectedUids, setSelectedUids] = useState<Set<string>>(new Set());
   const [manualUid, setManualUid] = useState("");
   const [manualName, setManualName] = useState("");
@@ -197,6 +197,7 @@ export default function AdminPage() {
                       }} className="sr-only" />
                     <span className="text-gray-900">{m.doubanName}</span>
                     <span className="text-gray-500">{m.doubanUid}</span>
+                    {m.protected && <span className="text-green-600" title="受保护，清理时不会被禁用">🛡</span>}
                   </label>
                 ))}
               </div>

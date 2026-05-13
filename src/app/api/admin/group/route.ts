@@ -65,16 +65,17 @@ export async function POST(request: NextRequest) {
       added++;
     }
 
-    // Deactivate registered users who are NOT in the group
+    // Deactivate registered users who are NOT in the group (skip protected members)
     const groupUids = new Set(members.map((m) => m.doubanUid));
     const allUsers = await prisma.user.findMany({ select: { id: true, doubanUid: true, role: true } });
+    const protectedMembers = await prisma.groupMember.findMany({ where: { protected: true }, select: { doubanUid: true } });
+    const protectedUids = new Set(protectedMembers.map((m) => m.doubanUid));
     let deactivated = 0;
     for (const u of allUsers) {
       if (u.role === "ADMIN") continue;
-      if (!groupUids.has(u.doubanUid) && u.doubanUid !== "admin") {
-        await prisma.user.update({ where: { id: u.id }, data: { status: "DISABLED" } });
-        deactivated++;
-      }
+      if (groupUids.has(u.doubanUid) || protectedUids.has(u.doubanUid)) continue;
+      await prisma.user.update({ where: { id: u.id }, data: { status: "DISABLED" } });
+      deactivated++;
     }
 
     return NextResponse.json({ added, deactivated, totalMembers: members.length });
