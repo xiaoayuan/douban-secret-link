@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { randomInt, randomUUID } from "node:crypto";
+import { randomInt } from "node:crypto";
 import { z } from "zod";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import { prisma } from "@/lib/prisma";
@@ -124,26 +124,14 @@ export async function PATCH(request: NextRequest) {
     const member = await prisma.groupMember.findUnique({ where: { doubanUid: challenge.doubanUid } });
     if (!member) throw new ApiError("这个豆瓣UID不在当前小组成员名单中", 403);
 
-    const user = await prisma.user.upsert({
-      where: { doubanUid: challenge.doubanUid },
-      update: { doubanName: member.doubanName, avatar: member.avatar, status: "ACTIVE" },
-      create: {
-        doubanUid: challenge.doubanUid,
-        doubanName: member.doubanName,
-        avatar: member.avatar,
-        passwordHash: randomUUID(),
-        status: "ACTIVE",
-      },
-    });
-
     await prisma.authChallenge.update({
       where: { id: challenge.id },
       data: { status: "VERIFIED", verifiedAt: new Date() },
     });
 
-    const token = signToken({ doubanUid: user.doubanUid, doubanName: user.doubanName });
+    const token = signToken({ doubanUid: member.doubanUid, doubanName: member.doubanName });
     const response = NextResponse.json({
-      user: { doubanUid: user.doubanUid, doubanName: user.doubanName, role: user.role },
+      user: { doubanUid: member.doubanUid, doubanName: member.doubanName, role: "MEMBER" },
     });
     response.cookies.set(AUTH_COOKIE_NAME, token, {
       httpOnly: true,

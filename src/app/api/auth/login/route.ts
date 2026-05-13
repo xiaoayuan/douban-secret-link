@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     const { doubanUid, password } = loginSchema.parse(body);
 
     const user = await prisma.user.findUnique({ where: { doubanUid } });
-    if (!user) return NextResponse.json({ error: "UID未注册" }, { status: 401 });
+    if (!user) return NextResponse.json({ error: "管理员账号不存在" }, { status: 401 });
 
     const valid = await verifyPassword(password, user.passwordHash);
     if (!valid) return NextResponse.json({ error: "密码错误" }, { status: 401 });

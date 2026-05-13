@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
       added++;
     }
 
-    // Deactivate registered users who are NOT in the group (skip protected members)
+    // Keep legacy non-admin accounts disabled if they are no longer group members.
     const groupUids = new Set(members.map((m) => m.doubanUid));
     const allUsers = await prisma.user.findMany({ select: { id: true, doubanUid: true, role: true, protected: true } });
     const protectedUids = new Set(allUsers.filter((u) => u.protected).map((u) => u.doubanUid));

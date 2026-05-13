@@ -10,7 +10,19 @@ export async function GET() {
   if (!session) return NextResponse.json({ user: null });
 
   const dbUser = await prisma.user.findUnique({ where: { doubanUid: session.doubanUid } });
-  if (!dbUser) return NextResponse.json({ user: null });
+  if (!dbUser) {
+    const member = await prisma.groupMember.findUnique({ where: { doubanUid: session.doubanUid } });
+    if (!member) return NextResponse.json({ user: null });
+    return NextResponse.json({
+      user: {
+        doubanUid: member.doubanUid,
+        doubanName: member.doubanName,
+        avatar: member.avatar,
+        role: "MEMBER",
+        status: "ACTIVE",
+      },
+    });
+  }
 
   return NextResponse.json({
     user: {

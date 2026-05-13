@@ -26,8 +26,7 @@ export default function RootLayout({
             <div className="mx-auto flex h-14 max-w-4xl items-center justify-between px-4">
               <Link href="/" className="text-lg font-semibold text-gray-900">私密链接</Link>
               <div className="flex items-center gap-2">
-                <Link href="/login" className="text-sm text-gray-600">登录</Link>
-                <Link href="/register" className="rounded-lg bg-gray-900 px-3 py-1.5 text-xs font-medium text-white">注册</Link>
+                <Link href="/login" className="text-sm text-gray-600">管理员登录</Link>
               </div>
             </div>
           </header>

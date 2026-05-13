@@ -132,7 +132,7 @@ export default function AdminPage() {
         <div className="mb-6 rounded-xl bg-white p-6 shadow-sm">
           <h2 className="mb-3 text-sm font-medium text-gray-700">豆瓣小组同步</h2>
           <p className="mb-3 text-xs text-gray-500">
-            设置豆瓣小组成员页URL，系统将抓取小组成员列表。只有小组成员才能注册。
+            设置豆瓣小组成员页URL，系统将抓取小组成员列表。只有小组成员才能通过评论验证访问。
             {savedGroupUrl && <> 当前已同步 {memberCount} 名成员。</>}
           </p>
           <div className="flex gap-2">
@@ -217,33 +217,6 @@ export default function AdminPage() {
               </div>
             </div>
           )}
-        </div>
-
-        {/* 评论区激活 */}
-        <div className="mb-6 rounded-xl bg-white p-6 shadow-sm">
-          <h2 className="mb-3 text-sm font-medium text-gray-700">评论区激活用户</h2>
-          <p className="mb-3 text-xs text-gray-500">粘贴豆瓣帖子URL，系统扫描评论区。在该帖回复过的已注册用户将被自动激活。</p>
-          <div className="flex gap-2">
-            <input type="text" id="activatePostUrl"
-              placeholder="豆瓣帖子URL" className="flex-1 rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none" />
-            <button onClick={async () => {
-              const url = (document.getElementById("activatePostUrl") as HTMLInputElement).value;
-              if (!url) return;
-              setScanning(true); setScanResult("");
-              try {
-                const res = await fetch("/api/admin/activate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ postUrl: url }) });
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.error);
-                setScanResult(`扫描 ${data.totalScanned} 个UID，激活 ${data.totalActivated} 个用户`);
-                fetchUsers();
-                (document.getElementById("activatePostUrl") as HTMLInputElement).value = "";
-              } catch (e) { setScanResult(e instanceof Error ? e.message : "激活失败"); }
-              setScanning(false);
-            }} disabled={scanning} className="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700 disabled:opacity-50">
-              {scanning ? "扫描中..." : "扫描激活"}
-            </button>
-          </div>
-          {scanResult && <div className="mt-2 text-xs text-green-600">{scanResult}</div>}
         </div>
 
         {/* 用户管理 */}

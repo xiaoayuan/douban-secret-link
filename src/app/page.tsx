@@ -17,7 +17,7 @@ export default function HomePage() {
       <main className="flex min-h-[80vh] flex-col items-center justify-center px-4">
         <div className="w-full max-w-md text-center">
           <h1 className="text-3xl font-bold text-gray-900">私密链接</h1>
-          <p className="mt-3 text-sm text-gray-600">创建私密链接，分享给豆瓣白名单好友。只有激活用户才能查看和回复。</p>
+          <p className="mt-3 text-sm text-gray-600">创建私密链接，分享给豆瓣白名单好友。只有通过评论验证的小组成员才能查看和回复。</p>
           {!loading && (user ? (
             <div className="mt-8 flex flex-col items-center gap-3">
               <Link href="/create" className="inline-block rounded-full bg-gray-900 px-8 py-3 text-sm font-medium text-white hover:bg-gray-800">创建密文</Link>
@@ -25,8 +25,8 @@ export default function HomePage() {
             </div>
           ) : (
             <div className="mt-8 flex flex-col items-center gap-3">
-              <Link href="/register" className="inline-block w-48 rounded-full bg-gray-900 px-8 py-3 text-sm font-medium text-white hover:bg-gray-800">注册</Link>
-              <Link href="/login" className="text-sm text-gray-600 hover:text-gray-700">已有账号？登录</Link>
+              <p className="max-w-xs text-xs leading-5 text-gray-500">从私密链接进入后，按页面提示完成豆瓣评论验证即可查看内容。</p>
+              <Link href="/login" className="text-sm text-gray-600 hover:text-gray-700">管理员登录</Link>
             </div>
           ))}
         </div>

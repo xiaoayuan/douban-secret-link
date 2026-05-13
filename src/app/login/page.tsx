@@ -2,7 +2,6 @@
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import Link from "next/link";
 
 function LoginForm() {
   const router = useRouter();
@@ -34,7 +33,7 @@ function LoginForm() {
 
   return (
     <div className="w-full max-w-sm">
-      <h1 className="mb-6 text-center text-2xl font-bold text-gray-900">登录</h1>
+      <h1 className="mb-6 text-center text-2xl font-bold text-gray-900">管理员登录</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         {error && (
           <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">{error}</div>
@@ -56,9 +55,7 @@ function LoginForm() {
           {loading ? "登录中..." : "登录"}
         </button>
       </form>
-      <p className="mt-4 text-center text-sm text-gray-600">
-        还没有账号？<Link href="/register" className="text-gray-900 underline">注册</Link>
-      </p>
+      <p className="mt-4 text-center text-xs leading-5 text-gray-500">普通成员无需注册，请从私密链接进入并完成豆瓣评论验证。</p>
     </div>
   );
 }

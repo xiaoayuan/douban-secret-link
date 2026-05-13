@@ -2,7 +2,7 @@
 
 ## 项目概述
 
-一个基于豆瓣小组的私密内容分享平台。管理员设置豆瓣小组成员白名单，小组成员注册后可创建带验证数字的私密链接，分享给白名单用户查看和聊天。
+一个基于豆瓣小组的私密内容分享平台。管理员设置豆瓣小组成员白名单，小组成员通过豆瓣评论验证码后可查看和创建私密链接。
 
 **地址**: https://db.971014.xyz
 
@@ -19,10 +19,10 @@
 
 | 功能 | 说明 |
 |------|------|
-| 注册 | 输入豆瓣UID + 密码，昵称自动从白名单读取 |
+| 评论验证 | 输入豆瓣UID，去验证帖回复一次性口令 |
 | 登录 | UID + 密码 |
 | 改密码 | 顶部导航栏"改密"按钮 |
-| 首位注册者 | 自动成为管理员 |
+| 管理员 | 仅管理员保留密码登录 |
 | 激活机制 | 管理员手动激活 / 评论区扫描激活 |
 
 ### 2. 白名单管理
@@ -50,7 +50,7 @@
 - 所有API需登录认证
 - Cookie HttpOnly + SameSite
 - 验证数字二次保护密文
-- 只有白名单UID可注册
+- 只有白名单UID可通过评论验证
 - 退出小组的用户自动禁用
 
 ## 部署
@@ -88,7 +88,6 @@ PORT=3006 HOSTNAME=0.0.0.0 AUTH_COOKIE_SECURE=true UPLOAD_DIR=/var/www/dsl/uploa
 
 | 路由 | 方法 | 说明 |
 |------|------|------|
-| `/api/auth/register` | POST | 注册 |
 | `/api/auth/login` | POST | 登录 |
 | `/api/auth/me` | GET | 当前用户 |
 | `/api/auth/logout` | GET | 登出 |
@@ -101,7 +100,6 @@ PORT=3006 HOSTNAME=0.0.0.0 AUTH_COOKIE_SECURE=true UPLOAD_DIR=/var/www/dsl/uploa
 | `/api/admin/users` | GET/PATCH | 用户管理 |
 | `/api/admin/members` | GET/POST/DELETE | 白名单管理 |
 | `/api/admin/group` | GET/POST | 小组同步 |
-| `/api/admin/activate` | POST | 评论区激活 |
 | `/api/admin/proxy` | GET/POST | 抓取设置 |
 
 ## 数据库模型
