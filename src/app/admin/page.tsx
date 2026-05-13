@@ -22,6 +22,8 @@ export default function AdminPage() {
   const [showMembers, setShowMembers] = useState(false);
   const [members, setMembers] = useState<{ id: string; doubanUid: string; doubanName: string; avatar: string | null }[]>([]);
   const [selectedUids, setSelectedUids] = useState<Set<string>>(new Set());
+  const [manualUid, setManualUid] = useState("");
+  const [manualName, setManualName] = useState("");
   const [proxyUrl, setProxyUrl] = useState("");
   const [doubanCookie, setDoubanCookie] = useState("");
 
@@ -134,6 +136,27 @@ export default function AdminPage() {
             >{scanning ? "扫描中..." : "扫描同步"}</button>
           </div>
           {scanResult && <div className="mt-2 text-xs text-blue-600">{scanResult}</div>}
+
+          <div className="mt-3 flex gap-2 items-end">
+            <div className="flex-1">
+              <label className="block text-xs text-gray-500 mb-0.5">手动添加成员</label>
+              <input type="text" value={manualUid} onChange={(e) => setManualUid(e.target.value)}
+                placeholder="豆瓣UID" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none"
+                onKeyDown={(e) => e.key === "Enter" && manualUid && fetch("/api/admin/members", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ doubanUid: manualUid, doubanName: manualName }) }).then(r => r.json()).then(() => { setManualUid(""); setManualName(""); fetchMembers(); fetchGroupInfo(); }) }
+              />
+            </div>
+            <div className="w-28">
+              <input type="text" value={manualName} onChange={(e) => setManualName(e.target.value)}
+                placeholder="昵称(可选)" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-gray-500 focus:outline-none"
+                onKeyDown={(e) => e.key === "Enter" && manualUid && fetch("/api/admin/members", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ doubanUid: manualUid, doubanName: manualName }) }).then(r => r.json()).then(() => { setManualUid(""); setManualName(""); fetchMembers(); fetchGroupInfo(); }) }
+              />
+            </div>
+            <button onClick={async () => {
+              if (!manualUid) return;
+              await fetch("/api/admin/members", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ doubanUid: manualUid, doubanName: manualName }) });
+              setManualUid(""); setManualName(""); fetchMembers(); fetchGroupInfo();
+            }} className="rounded-lg bg-gray-600 px-3 py-2 text-sm text-white hover:bg-gray-700 whitespace-nowrap">添加</button>
+          </div>
           {savedGroupUrl && (
             <button onClick={() => { setShowMembers(!showMembers); if (!showMembers) fetchMembers(); }}
               className="mt-2 text-xs text-gray-500 hover:text-gray-700">

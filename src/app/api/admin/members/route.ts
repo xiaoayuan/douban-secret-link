@@ -40,3 +40,25 @@ export async function DELETE(request: NextRequest) {
     return handleApiError(error);
   }
 }
+
+export async function POST(request: NextRequest) {
+  try {
+    const user = await requireAuth();
+    const dbUser = await prisma.user.findUnique({ where: { doubanUid: user.doubanUid } });
+    if (!dbUser || dbUser.role !== "ADMIN") throw new ApiError("仅管理员可访问", 403);
+
+    const body = await request.json();
+    const { doubanUid, doubanName } = body;
+    if (!doubanUid) throw new ApiError("请提供UID", 400);
+
+    const member = await prisma.groupMember.upsert({
+      where: { doubanUid },
+      update: { doubanName: doubanName || doubanUid },
+      create: { doubanUid, doubanName: doubanName || doubanUid },
+    });
+
+    return NextResponse.json({ member }, { status: 201 });
+  } catch (error) {
+    return handleApiError(error);
+  }
+}
