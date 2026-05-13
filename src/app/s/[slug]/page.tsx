@@ -49,6 +49,18 @@ export default function SecretPage() {
   const [verifyInput, setVerifyInput] = useState("");
   const [verifying, setVerifying] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  const scrollToBottom = () => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  // Only auto-scroll if user is already near bottom
+  const isNearBottom = () => {
+    const el = chatContainerRef.current;
+    if (!el) return true;
+    return el.scrollHeight - el.scrollTop - el.clientHeight < 100;
+  };
 
   const fetchSecret = useCallback(async () => {
     const res = await fetch(`/api/secrets/${slug}`);
@@ -73,8 +85,6 @@ export default function SecretPage() {
     return () => { cancelled = true; };
   }, [user, fetchSecret]);
 
-  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [secret?.replies]);
-
   // Auto-refresh replies every 3s
   useEffect(() => {
     if (!secret || secret.needsVerifyCode || loading) return;
@@ -83,7 +93,9 @@ export default function SecretPage() {
         const res = await fetch(`/api/secrets/${slug}`);
         const data = await res.json();
         if (data.secret && !data.secret.needsVerifyCode) {
+          const nearBottom = isNearBottom();
           setSecret((prev) => prev ? { ...prev, replies: data.secret.replies } : prev);
+          if (nearBottom) setTimeout(scrollToBottom, 100);
         }
       } catch { /* ignore */ }
     }, 3000);
@@ -132,6 +144,7 @@ export default function SecretPage() {
       if (!res.ok) throw new Error(data.error);
       if (secret) setSecret({ ...secret, replies: [...secret.replies, data.reply] });
       setReplyText("");
+      scrollToBottom();
     } catch (e) { setError(e instanceof Error ? e.message : "发送失败"); }
     setSending(false);
   };
@@ -181,7 +194,7 @@ export default function SecretPage() {
 
         <div className="mt-4 rounded-xl bg-white shadow-sm">
           <div className="border-b border-gray-100 px-4 py-3"><span className="text-sm font-medium text-gray-700">对话 ({secret.replies.length})</span></div>
-          <div className="max-h-96 overflow-y-auto p-4">
+          <div className="max-h-96 overflow-y-auto p-4" ref={chatContainerRef}>
             {secret.replies.length === 0 && <div className="py-8 text-center text-sm text-gray-500">还没有回复</div>}
             {secret.replies.map((reply) => (
               <div key={reply.id} className="mb-4 last:mb-0">
