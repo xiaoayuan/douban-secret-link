@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, ApiError, handleApiError } from "@/lib/api-auth";
 import { writeFile, mkdir } from "node:fs/promises";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { randomUUID } from "node:crypto";
 
 const MAX_SIZE = 10 * 1024 * 1024; // 10MB
@@ -28,7 +28,11 @@ export async function POST(request: NextRequest) {
 
     const ext = file.type.split("/")[1] || "jpg";
     const filename = `${randomUUID()}.${ext}`;
-    const uploadsDir = process.env.UPLOAD_DIR || join(process.cwd(), "public", "uploads");
+    const publicUploadsDir = resolve(process.cwd(), "public", "uploads");
+    const uploadsDir = resolve(process.env.UPLOAD_DIR || publicUploadsDir);
+    if (uploadsDir !== publicUploadsDir) {
+      throw new ApiError("UPLOAD_DIR 必须指向 public/uploads，确保上传文件可公开访问", 500);
+    }
 
     await mkdir(uploadsDir, { recursive: true });
 

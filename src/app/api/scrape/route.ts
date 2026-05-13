@@ -6,6 +6,13 @@ const scrapeSchema = z.object({
   url: z.string().url("请提供有效的URL"),
 });
 
+function assertDoubanUrl(url: string) {
+  const { hostname } = new URL(url);
+  if (hostname !== "www.douban.com") {
+    throw new ApiError("只允许访问豆瓣 www.douban.com 页面", 400);
+  }
+}
+
 interface ParsedMember {
   doubanUid: string;
   doubanName: string;
@@ -17,6 +24,7 @@ export async function POST(request: NextRequest) {
     await requireAuth();
     const body = await request.json();
     const { url } = scrapeSchema.parse(body);
+    assertDoubanUrl(url);
 
     const members = await scrapeGroupMembers(url);
 

@@ -16,7 +16,7 @@ export async function POST(
     if (secret.expiresAt && new Date() > secret.expiresAt) throw new ApiError("已过期", 410);
 
     const body = await request.json();
-    const verifyCode = body.verifyCode || secret.verifyCode;
+    const verifyCode = typeof body.verifyCode === "string" ? body.verifyCode.trim() : "";
     if (secret.verifyCode && verifyCode !== secret.verifyCode) {
       throw new ApiError("验证数字错误", 403);
     }

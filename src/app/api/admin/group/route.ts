@@ -29,14 +29,15 @@ export async function POST(request: NextRequest) {
 
     if (!url) throw new ApiError("请提供豆瓣小组成员页URL", 400);
 
+    let parsedUrl: URL;
     try {
-      new URL(url);
+      parsedUrl = new URL(url);
     } catch {
       throw new ApiError("URL格式不正确，请输入完整的豆瓣小组页面地址", 400);
     }
 
-    if (!url.includes("douban.com")) {
-      throw new ApiError("请输入豆瓣域名下的页面地址", 400);
+    if (parsedUrl.hostname !== "www.douban.com") {
+      throw new ApiError("请输入 www.douban.com 域名下的页面地址", 400);
     }
 
     // Save group URL

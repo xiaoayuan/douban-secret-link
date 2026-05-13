@@ -12,6 +12,17 @@ export async function POST(request: NextRequest) {
     const { postUrl } = body;
     if (!postUrl) throw new ApiError("请提供帖子URL", 400);
 
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(postUrl);
+    } catch {
+      throw new ApiError("URL格式不正确，请输入完整的豆瓣帖子地址", 400);
+    }
+
+    if (parsedUrl.hostname !== "www.douban.com") {
+      throw new ApiError("请输入 www.douban.com 域名下的帖子地址", 400);
+    }
+
     const response = await fetch(postUrl, {
       headers: {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
