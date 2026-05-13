@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
 
     const ext = file.type.split("/")[1] || "jpg";
     const filename = `${randomUUID()}.${ext}`;
-    const uploadsDir = join(process.cwd(), "public", "uploads");
+    const uploadsDir = process.env.UPLOAD_DIR || join(process.cwd(), "public", "uploads");
 
     await mkdir(uploadsDir, { recursive: true });
 
