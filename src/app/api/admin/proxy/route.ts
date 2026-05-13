@@ -9,9 +9,11 @@ export async function GET() {
     if (!dbUser || dbUser.role !== "ADMIN") throw new ApiError("仅管理员", 403);
 
     const proxy = await prisma.systemSetting.findUnique({ where: { key: "scrape_proxy" } });
+    const proxyUsername = await prisma.systemSetting.findUnique({ where: { key: "scrape_proxy_username" } });
+    const proxyPassword = await prisma.systemSetting.findUnique({ where: { key: "scrape_proxy_password" } });
     const cookie = await prisma.systemSetting.findUnique({ where: { key: "douban_cookie" } });
     const verifyPostUrl = await prisma.systemSetting.findUnique({ where: { key: "douban_verify_post_url" } });
-    return NextResponse.json({ proxy: proxy?.value || "", cookie: cookie?.value || "", verifyPostUrl: verifyPostUrl?.value || "" });
+    return NextResponse.json({ proxy: proxy?.value || "", proxyUsername: proxyUsername?.value || "", proxyPassword: proxyPassword?.value || "", cookie: cookie?.value || "", verifyPostUrl: verifyPostUrl?.value || "" });
   } catch (error) {
     return handleApiError(error);
   }
@@ -24,13 +26,29 @@ export async function POST(request: NextRequest) {
     if (!dbUser || dbUser.role !== "ADMIN") throw new ApiError("仅管理员", 403);
 
     const body = await request.json();
-    const { proxy, cookie, verifyPostUrl } = body;
+    const { proxy, proxyUsername, proxyPassword, cookie, verifyPostUrl } = body;
 
     if (proxy !== undefined) {
       await prisma.systemSetting.upsert({
         where: { key: "scrape_proxy" },
         update: { value: proxy || "" },
         create: { key: "scrape_proxy", value: proxy || "" },
+      });
+    }
+
+    if (proxyUsername !== undefined) {
+      await prisma.systemSetting.upsert({
+        where: { key: "scrape_proxy_username" },
+        update: { value: proxyUsername || "" },
+        create: { key: "scrape_proxy_username", value: proxyUsername || "" },
+      });
+    }
+
+    if (proxyPassword !== undefined) {
+      await prisma.systemSetting.upsert({
+        where: { key: "scrape_proxy_password" },
+        update: { value: proxyPassword || "" },
+        create: { key: "scrape_proxy_password", value: proxyPassword || "" },
       });
     }
 
@@ -50,7 +68,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    return NextResponse.json({ proxy, cookie, verifyPostUrl });
+    return NextResponse.json({ proxy, proxyUsername, proxyPassword, cookie, verifyPostUrl });
   } catch (error) {
     return handleApiError(error);
   }

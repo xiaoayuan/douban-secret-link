@@ -5,6 +5,7 @@ import { HttpsProxyAgent } from "https-proxy-agent";
 import { prisma } from "@/lib/prisma";
 import { AUTH_COOKIE_NAME, signToken } from "@/lib/auth";
 import { ApiError, handleApiError } from "@/lib/api-auth";
+import { getConfiguredProxyUrl } from "@/lib/proxy";
 
 const startSchema = z.object({
   doubanUid: z.string().min(1).max(80),
@@ -58,19 +59,17 @@ async function getVerifyPostUrl() {
 }
 
 async function fetchVerifyPostHtml(url: string) {
-  const cookie = await prisma.systemSetting.findUnique({ where: { key: "douban_cookie" } });
-  const proxy = await prisma.systemSetting.findUnique({ where: { key: "scrape_proxy" } });
   const headers: Record<string, string> = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
     Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
     "Cache-Control": "no-cache",
   };
-  if (cookie?.value) headers.Cookie = cookie.value;
 
   const options: Record<string, unknown> = { headers };
-  if (proxy?.value) {
-    options.agent = new HttpsProxyAgent(proxy.value);
+  const proxyUrl = await getConfiguredProxyUrl();
+  if (proxyUrl) {
+    options.agent = new HttpsProxyAgent(proxyUrl);
   }
 
   const pages: string[] = [];

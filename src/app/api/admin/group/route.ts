@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireAuth, ApiError, handleApiError } from "@/lib/api-auth";
 import { scrapeGroupMembersAllPages } from "@/lib/douban";
+import { getConfiguredProxyUrl } from "@/lib/proxy";
 
 async function requireAdmin() {
   const user = await requireAuth();
@@ -48,9 +49,8 @@ export async function POST(request: NextRequest) {
     });
 
     // Get proxy setting
-    const proxySetting = await prisma.systemSetting.findUnique({ where: { key: "scrape_proxy" } });
     const cookieSetting = await prisma.systemSetting.findUnique({ where: { key: "douban_cookie" } });
-    const proxyUrl = proxySetting?.value || undefined;
+    const proxyUrl = await getConfiguredProxyUrl();
     const cookie = cookieSetting?.value || undefined;
 
     const members = await scrapeGroupMembersAllPages(url, proxyUrl, cookie);
